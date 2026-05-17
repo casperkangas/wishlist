@@ -37,11 +37,11 @@ struct AddWishView: View {
                     TextField("Name", text: $name)
                         .focused($focusedField, equals: .name)
 
-                    TextField("Price (e.g. 29.99)", text: $price)
+                    TextField("Price", text: $price)
 
-                    TextField("Link", text: $urlString)
+                    TextField("Wish URL", text: $urlString)
 
-                    TextField("Image URL (optional)", text: $imageURLString)
+                    TextField("Image URL", text: $imageURLString)
                 }
 
                 Section {
