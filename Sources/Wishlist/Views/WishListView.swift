@@ -42,10 +42,11 @@ struct WishListView: View {
                             )
                         }
                     }
-                    .animation(
-                        .spring(response: 0.38, dampingFraction: 0.78),
-                        value: items.map { $0.id }
-                    )
+                    totalFooter
+                        .animation(
+                            .spring(response: 0.38, dampingFraction: 0.78),
+                            value: items.map { $0.id }
+                        )
                 }
             }
             .padding(24)
@@ -123,4 +124,35 @@ struct WishListView: View {
         if isBoughtView { return "Mark wishes as bought and they'll appear here." }
         return "Start your list by adding something you'd love to have."
     }
+
+    private var totalSum: Double {
+        items.compactMap { $0.price }.reduce(0, +)
+    }
+
+    private var hasPrices: Bool {
+        items.contains { $0.price != nil }
+    }
+
+    @ViewBuilder
+    private var totalFooter: some View {
+        if hasPrices && !isDeletedView {
+            HStack {
+                Text("Total")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(secondaryText)
+                Spacer()
+                Text(
+                    totalSum, format: .currency(code: Locale.current.currency?.identifier ?? "USD")
+                )
+                .font(.title3.weight(.bold))
+                .foregroundStyle(primaryText)
+                .monospacedDigit()
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+            .padding(.top, 4)
+        }
+    }
+
 }
