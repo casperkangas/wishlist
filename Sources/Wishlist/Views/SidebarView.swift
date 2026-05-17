@@ -11,6 +11,8 @@ struct SidebarView: View {
             Section("Browse") {
                 Label("All Wishes", systemImage: "sparkles")
                     .tag(SidebarItem.all)
+                Label("Bought", systemImage: "checkmark.seal.fill")
+                    .tag(SidebarItem.bought)
             }
 
             Section("Categories") {
