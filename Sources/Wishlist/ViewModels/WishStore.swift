@@ -63,6 +63,21 @@ final class WishStore {
         update(copy)
     }
 
+    /// Duplicate: inserts a fresh copy right after the original
+    func duplicate(_ item: WishItem) {
+        var copy = item
+        copy.id = UUID()
+        copy.createdAt = Date()
+        copy.isBought = false
+        copy.deletedAt = nil
+        if let idx = items.firstIndex(where: { $0.id == item.id }) {
+            items.insert(copy, at: idx + 1)
+        } else {
+            items.append(copy)
+        }
+        save()
+    }
+
     func addCategory(_ category: WishCategory) {
         categories.append(category)
         save()

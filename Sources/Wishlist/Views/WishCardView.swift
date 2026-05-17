@@ -2,39 +2,8 @@
 
 import SwiftUI
 
-// MARK: - HoverButtonStyle
-// All visual chrome (background tint, optional border, scale) lives
-// inside ONE ButtonStyle so no extra modifiers are stacked outside it.
-// Stacking .overlay() after a ButtonStyle forces an extra geometry pass
-// on every frame and causes the ~1s response delay on macOS.
-struct HoverButtonStyle: ButtonStyle {
-    var hoverTint: Color
-    var bordered: Bool = false
-    @State private var isHovered = false
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(isHovered ? hoverTint.opacity(0.18) : Color.clear)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .stroke(bordered ? hoverTint.opacity(0.45) : Color.clear, lineWidth: 1)
-                    )
-            )
-            .scaleEffect(configuration.isPressed ? 0.93 : 1.0)
-            .animation(.easeOut(duration: 0.10), value: isHovered)
-            .animation(.easeOut(duration: 0.06), value: configuration.isPressed)
-            .onHover { isHovered = $0 }
-    }
-}
-
-// MARK: - WishCardView
 struct WishCardView: View {
     @Environment(WishStore.self) private var store
-    @Environment(\.accentHue) private var accentHue
     let item: WishItem
 
     @State private var showingEdit      = false
@@ -44,13 +13,11 @@ struct WishCardView: View {
     private let secondaryText = Color(red: 0.42, green: 0.38, blue: 0.32)
     private let deleteRed     = Color(red: 0.72, green: 0.20, blue: 0.15)
 
-    // High priority uses the user-chosen accent hue.
-    // Medium and Low shift the hue by fixed offsets so they stay distinct.
     private var priorityColor: Color {
         switch item.priority {
-        case .high:   return Color(hue: accentHue / 360,          saturation: 0.72, brightness: 0.78)
-        case .medium: return Color(hue: (accentHue + 30) / 360,   saturation: 0.55, brightness: 0.68)
-        case .low:    return Color(hue: (accentHue + 180) / 360,  saturation: 0.20, brightness: 0.58)
+        case .high:   return Color(red: 0.78, green: 0.55, blue: 0.08)
+        case .medium: return Color(red: 0.55, green: 0.48, blue: 0.20)
+        case .low:    return Color(red: 0.42, green: 0.40, blue: 0.36)
         }
     }
 
@@ -62,9 +29,7 @@ struct WishCardView: View {
                 AsyncImage(url: imageURL) { phase in
                     switch phase {
                     case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFit()
+                        image.resizable().scaledToFit()
                             .frame(maxWidth: .infinity)
                             .background(Color(red: 0.92, green: 0.88, blue: 0.82))
                     case .failure:
@@ -128,56 +93,72 @@ struct WishCardView: View {
                         Link(destination: url) {
                             Label("Open Link", systemImage: "arrow.up.right.square")
                                 .font(.caption.weight(.medium))
+                                .padding(.horizontal, 10).padding(.vertical, 6)
                         }
-                        .buttonStyle(HoverButtonStyle(hoverTint: priorityColor))
                         .foregroundStyle(priorityColor)
                     }
 
                     Spacer()
 
-                    // Edit pencil — no border, instant
-                    Button { showingEdit = true } label: {
-                        Image(systemName: "pencil")
+                    // Duplicate
+                    CardButton(tint: secondaryText) {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                            store.duplicate(item)
+                        }
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                            .foregroundStyle(secondaryText)
                     }
-                    .buttonStyle(HoverButtonStyle(hoverTint: secondaryText))
-                    .foregroundStyle(secondaryText)
+                    .help("Duplicate wish")
+
+                    // Edit
+                    CardButton(tint: secondaryText) {
+                        showingEdit = true
+                    } label: {
+                        Image(systemName: "pencil")
+                            .foregroundStyle(secondaryText)
+                    }
                     .help("Edit wish (or double-click card)")
 
-                    // Mark Bought — border lives inside HoverButtonStyle
-                    Button(item.isBought ? "Unmark" : "Mark Bought") {
+                    // Mark Bought
+                    CardButton(tint: priorityColor, bordered: true) {
                         withAnimation(.spring(response: 0.45, dampingFraction: 0.72)) {
                             store.toggleBought(item)
                         }
+                    } label: {
+                        Text(item.isBought ? "Unmark" : "Mark Bought")
+                            .font(.subheadline)
+                            .foregroundStyle(item.isBought ? secondaryText : priorityColor)
                     }
-                    .buttonStyle(HoverButtonStyle(hoverTint: priorityColor, bordered: true))
-                    .foregroundStyle(item.isBought ? secondaryText : priorityColor)
 
-                    // Delete with 2-step confirmation
+                    // Delete — two-step
                     if confirmingDelete {
-                        Button("Are you sure?") {
+                        CardButton(tint: deleteRed, bordered: true) {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                                 store.softDelete(item)
                             }
+                        } label: {
+                            Text("Are you sure?")
+                                .font(.subheadline)
+                                .foregroundStyle(deleteRed)
                         }
-                        .buttonStyle(HoverButtonStyle(hoverTint: deleteRed, bordered: true))
-                        .foregroundStyle(deleteRed)
                         .transition(.scale.combined(with: .opacity))
                     } else {
-                        Button {
+                        CardButton(tint: deleteRed) {
                             withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
                                 confirmingDelete = true
                             }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                                withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
-                                    confirmingDelete = false
-                                }
+                                withAnimation { confirmingDelete = false }
                             }
-                        } label: { Image(systemName: "trash") }
-                        .buttonStyle(HoverButtonStyle(hoverTint: deleteRed))
-                        .foregroundStyle(deleteRed.opacity(0.7))
+                        } label: {
+                            Image(systemName: "trash")
+                                .foregroundStyle(deleteRed.opacity(0.7))
+                        }
                         .transition(.scale.combined(with: .opacity))
                     }
                 }
+                .animation(.spring(response: 0.25, dampingFraction: 0.7), value: confirmingDelete)
             }
             .padding(20)
         }

@@ -12,9 +12,9 @@ struct WishListView: View {
     let sortOption: SortOption
     let onAddWish: () -> Void
 
-    private let primaryText   = Color(red: 0.16, green: 0.13, blue: 0.10)
+    private let primaryText = Color(red: 0.16, green: 0.13, blue: 0.10)
     private let secondaryText = Color(red: 0.42, green: 0.38, blue: 0.32)
-    private let amber         = Color(red: 0.78, green: 0.55, blue: 0.08)
+    private let amber = Color(red: 0.78, green: 0.55, blue: 0.08)
 
     var body: some View {
         ScrollView {
@@ -37,7 +37,7 @@ struct WishListView: View {
                             .transition(
                                 .asymmetric(
                                     insertion: .move(edge: .trailing).combined(with: .opacity),
-                                    removal:   .move(edge: .trailing).combined(with: .opacity)
+                                    removal: .move(edge: .trailing).combined(with: .opacity)
                                 )
                             )
                         }
@@ -110,17 +110,17 @@ struct WishListView: View {
 
     private var emptyIcon: String {
         if isDeletedView { return "trash" }
-        if isBoughtView  { return "checkmark.seal" }
+        if isBoughtView { return "checkmark.seal" }
         return "gift"
     }
     private var emptyTitle: String {
         if isDeletedView { return "Trash is empty" }
-        if isBoughtView  { return "Nothing bought yet" }
+        if isBoughtView { return "Nothing bought yet" }
         return "No wishes yet"
     }
     private var emptyMessage: String {
         if isDeletedView { return "Deleted wishes appear here and are removed after 3 days." }
-        if isBoughtView  { return "Mark wishes as bought and they'll appear here." }
+        if isBoughtView { return "Mark wishes as bought and they'll appear here." }
         return "Start your list by adding something you'd love to have."
     }
 }

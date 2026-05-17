@@ -1,7 +1,7 @@
 //  WishlistApp.swift
 
-import SwiftUI
 import AppKit
+import SwiftUI
 
 @main
 struct WishlistApp: App {
@@ -20,7 +20,7 @@ struct WishlistApp: App {
         .windowStyle(.automatic)
         .defaultSize(width: 960, height: 640)
         .commands {
-            CommandGroup(replacing: .newItem) { }
+            CommandGroup(replacing: .newItem) {}
         }
     }
 }

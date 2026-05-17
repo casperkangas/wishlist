@@ -10,6 +10,7 @@ struct TrashedCardView: View {
 
     private let primaryText = Color(red: 0.16, green: 0.13, blue: 0.10)
     private let secondaryText = Color(red: 0.42, green: 0.38, blue: 0.32)
+    private let amber = Color(red: 0.78, green: 0.55, blue: 0.08)
     private let red = Color(red: 0.72, green: 0.20, blue: 0.15)
 
     private var daysRemaining: Int {
@@ -45,8 +46,7 @@ struct TrashedCardView: View {
                     }
                     Text("·").foregroundStyle(secondaryText.opacity(0.5))
                     Text("Deleted \(item.deletedAt?.formatted(.dateTime.day().month()) ?? "")")
-                        .font(.caption)
-                        .foregroundStyle(secondaryText.opacity(0.7))
+                        .font(.caption).foregroundStyle(secondaryText.opacity(0.7))
                     Text("·").foregroundStyle(secondaryText.opacity(0.5))
                     Text("\(daysRemaining)d left")
                         .font(.caption.weight(.semibold))
@@ -56,26 +56,27 @@ struct TrashedCardView: View {
 
             Spacer()
 
-            // Actions
-            Button("Restore") {
+            // Restore
+            CardButton(tint: amber) {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
                     store.restore(item)
                 }
+            } label: {
+                Text("Restore").foregroundStyle(amber)
             }
-            .buttonStyle(HoverButtonStyle(hoverTint: Color(red: 0.78, green: 0.55, blue: 0.08)))
-            .foregroundStyle(Color(red: 0.78, green: 0.55, blue: 0.08))
 
+            // Permanent delete — two-step
             if confirmingPermanent {
-                Button("Delete forever?") {
+                CardButton(tint: red, bordered: true) {
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
                         store.hardDelete(item)
                     }
+                } label: {
+                    Text("Delete forever?").foregroundStyle(red)
                 }
-                .buttonStyle(HoverButtonStyle(hoverTint: red))
-                .foregroundStyle(red)
                 .transition(.scale.combined(with: .opacity))
             } else {
-                Button {
+                CardButton(tint: red) {
                     withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
                         confirmingPermanent = true
                     }
@@ -83,14 +84,13 @@ struct TrashedCardView: View {
                         withAnimation { confirmingPermanent = false }
                     }
                 } label: {
-                    Image(systemName: "trash.slash")
+                    Image(systemName: "trash.slash").foregroundStyle(red.opacity(0.7))
                 }
-                .buttonStyle(HoverButtonStyle(hoverTint: red))
-                .foregroundStyle(red.opacity(0.7))
                 .help("Permanently delete")
                 .transition(.scale.combined(with: .opacity))
             }
         }
+        .animation(.spring(response: 0.25, dampingFraction: 0.7), value: confirmingPermanent)
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)

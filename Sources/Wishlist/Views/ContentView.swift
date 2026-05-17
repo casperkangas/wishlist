@@ -11,11 +11,11 @@ enum SidebarItem: Hashable {
 }
 
 enum SortOption: String, CaseIterable, Identifiable {
-    case priority  = "Priority"
-    case priceAsc  = "Price: Low to High"
+    case priority = "Priority"
+    case priceAsc = "Price: Low to High"
     case priceDesc = "Price: High to Low"
-    case newest    = "Newest First"
-    case oldest    = "Oldest First"
+    case newest = "Newest First"
+    case oldest = "Oldest First"
     var id: String { rawValue }
 }
 
@@ -25,7 +25,7 @@ struct ContentView: View {
     @State private var selectedItem: SidebarItem? = .all
     @State private var displayedItem: SidebarItem? = .all
     @State private var showingAddWish = false
-    @State private var searchText     = ""
+    @State private var searchText = ""
     @State private var sortOption: SortOption = .priority
 
     private var selectedCategory: WishCategory? {
@@ -33,7 +33,7 @@ struct ContentView: View {
         return store.categories.first(where: { $0.id == id })
     }
     private var isDeletedView: Bool { displayedItem == .deleted }
-    private var isBoughtView:  Bool { displayedItem == .bought  }
+    private var isBoughtView: Bool { displayedItem == .bought }
     private var selectedPriority: Priority? {
         guard case .priority(let p) = displayedItem else { return nil }
         return p
@@ -59,8 +59,8 @@ struct ContentView: View {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         if !query.isEmpty {
             base = base.filter {
-                $0.name.localizedCaseInsensitiveContains(query) ||
-                ($0.notes?.localizedCaseInsensitiveContains(query) ?? false)
+                $0.name.localizedCaseInsensitiveContains(query)
+                    || ($0.notes?.localizedCaseInsensitiveContains(query) ?? false)
             }
         }
         return base.sorted(using: sortOption)
@@ -86,7 +86,7 @@ struct ContentView: View {
                 .transition(
                     .asymmetric(
                         insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal:   .move(edge: .trailing).combined(with: .opacity)
+                        removal: .move(edge: .trailing).combined(with: .opacity)
                     )
                 )
             }
@@ -105,7 +105,9 @@ struct ContentView: View {
                 .pickerStyle(.menu)
                 .help("Sort wishes")
 
-                Button { showingAddWish = true } label: {
+                Button {
+                    showingAddWish = true
+                } label: {
                     Label("Add Wish", systemImage: "plus")
                 }
             }
@@ -116,10 +118,12 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $showingAddWish) {
-            AddWishView(preselectedCategoryID: {
-                if case .category(let id) = selectedItem { return id }
-                return nil
-            }())
+            AddWishView(
+                preselectedCategoryID: {
+                    if case .category(let id) = selectedItem { return id }
+                    return nil
+                }()
+            )
             .environment(store)
         }
         .onAppear { applyWarmWindowBackground() }
@@ -127,23 +131,23 @@ struct ContentView: View {
 
     private var listTitle: String {
         switch displayedItem {
-        case .bought:           return "Bought Wishes"
-        case .deleted:          return "Deleted Wishes"
-        case .priority(let p):  return "\(p.rawValue) Priority"
-        case .category:         return selectedCategory?.name ?? "Wishes"
-        default:                return "All Wishes"
+        case .bought: return "Bought Wishes"
+        case .deleted: return "Deleted Wishes"
+        case .priority(let p): return "\(p.rawValue) Priority"
+        case .category: return selectedCategory?.name ?? "Wishes"
+        default: return "All Wishes"
         }
     }
 
     private var listSubtitle: String {
         switch displayedItem {
-        case .bought:            return "Things you've already treated yourself to."
-        case .deleted:           return "Items are permanently removed after 3 days."
-        case .priority(.high):   return "Your most important wishes."
+        case .bought: return "Things you've already treated yourself to."
+        case .deleted: return "Items are permanently removed after 3 days."
+        case .priority(.high): return "Your most important wishes."
         case .priority(.medium): return "Wishes you'd love but aren't urgent."
-        case .priority(.low):    return "Nice to have someday."
-        case .category:          return "Your curated list for this category."
-        default:                 return "Everything you're dreaming about."
+        case .priority(.low): return "Nice to have someday."
+        case .category: return "Your curated list for this category."
+        default: return "Everything you're dreaming about."
         }
     }
 }
@@ -156,15 +160,15 @@ extension Array where Element == WishItem {
             let order: [Priority] = [.high, .medium, .low]
             return sorted {
                 if $0.priority != $1.priority {
-                    return (order.firstIndex(of: $0.priority) ?? 2) <
-                           (order.firstIndex(of: $1.priority) ?? 2)
+                    return (order.firstIndex(of: $0.priority) ?? 2)
+                        < (order.firstIndex(of: $1.priority) ?? 2)
                 }
                 return $0.createdAt > $1.createdAt
             }
-        case .priceAsc:  return sorted { ($0.price ?? 0) < ($1.price ?? 0) }
+        case .priceAsc: return sorted { ($0.price ?? 0) < ($1.price ?? 0) }
         case .priceDesc: return sorted { ($0.price ?? 0) > ($1.price ?? 0) }
-        case .newest:    return sorted { $0.createdAt > $1.createdAt }
-        case .oldest:    return sorted { $0.createdAt < $1.createdAt }
+        case .newest: return sorted { $0.createdAt > $1.createdAt }
+        case .oldest: return sorted { $0.createdAt < $1.createdAt }
         }
     }
 }
