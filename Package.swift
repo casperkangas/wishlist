@@ -1,0 +1,18 @@
+// swift-tools-version: 5.9
+import PackageDescription
+
+let package = Package(
+    name: "Wishlist",
+    platforms: [
+        .macOS(.v14)   // macOS 14 = Sonoma, required for @Observable
+    ],
+    targets: [
+        .executableTarget(
+            name: "Wishlist",
+            path: "Sources/Wishlist",
+            swiftSettings: [
+                .unsafeFlags(["-strict-concurrency=minimal"])
+            ]
+        )
+    ]
+)

@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:wishlist}",
+      "name": "Debug Wishlist",
+      "target": "Wishlist",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug Wishlist"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:wishlist}",
+      "name": "Release Wishlist",
+      "target": "Wishlist",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release Wishlist"
+    }
+  ]
+}
