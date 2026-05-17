@@ -46,7 +46,7 @@ struct AddWishView: View {
 
                 Section {
                     Picker("Priority", selection: $priority) {
-                        ForEach(Priority.allCases) { level in
+                        ForEach(Priority.allCases.reversed()) { level in
                             Label(level.rawValue, systemImage: level.icon)
                                 .tag(level)
                         }

@@ -23,31 +23,32 @@ struct ContentView: View {
     @Environment(WishStore.self) private var store
 
     @State private var selectedItem: SidebarItem? = .all
+    @State private var displayedItem: SidebarItem? = .all
     @State private var showingAddWish = false
     @State private var searchText     = ""
     @State private var sortOption: SortOption = .priority
-
-    // Drives the slide animation — updated with a slight delay so
-    // SwiftUI sees the old view leave before the new one enters.
-    @State private var displayedItem: SidebarItem? = .all
 
     private var selectedCategory: WishCategory? {
         guard case .category(let id) = displayedItem else { return nil }
         return store.categories.first(where: { $0.id == id })
     }
-    private var isDeletedView: Bool  { displayedItem == .deleted }
-    private var isBoughtView:  Bool  { displayedItem == .bought  }
+    private var isDeletedView: Bool { displayedItem == .deleted }
+    private var isBoughtView:  Bool { displayedItem == .bought  }
     private var selectedPriority: Priority? {
         guard case .priority(let p) = displayedItem else { return nil }
         return p
     }
 
     private var filteredItems: [WishItem] {
-        if isDeletedView { return store.trashedItems }
-        if isBoughtView  {
+        // Deleted: apply sort to trash too
+        if isDeletedView {
+            return store.trashedItems.sorted(using: sortOption)
+        }
+        // Bought: apply sort
+        if isBoughtView {
             return store.items
                 .filter { $0.isBought && !$0.isDeleted }
-                .sorted { $0.createdAt > $1.createdAt }
+                .sorted(using: sortOption)
         }
         var base: [WishItem]
         if let p = selectedPriority {
@@ -70,11 +71,6 @@ struct ContentView: View {
             SidebarView(selectedItem: $selectedItem)
                 .navigationSplitViewColumnWidth(min: 200, ideal: 230)
         } detail: {
-            // The ZStack + .id key is the correct pattern for guaranteed
-            // directional slide transitions on macOS/SwiftUI.
-            // Every time displayedItem changes, SwiftUI removes the old
-            // WishListView (trailing removal) and inserts the new one
-            // (trailing insertion = slides in from right).
             ZStack {
                 WishListView(
                     title: listTitle,
@@ -86,8 +82,6 @@ struct ContentView: View {
                     sortOption: sortOption,
                     onAddWish: { showingAddWish = true }
                 )
-                // Key on displayedItem so SwiftUI treats each view as
-                // a distinct identity and plays the transition.
                 .id(displayedItem)
                 .transition(
                     .asymmetric(
@@ -96,7 +90,6 @@ struct ContentView: View {
                     )
                 )
             }
-            // Animate when displayedItem changes
             .animation(.spring(response: 0.38, dampingFraction: 0.82), value: displayedItem)
         }
         .searchable(text: $searchText, prompt: "Search wishes")
@@ -117,8 +110,6 @@ struct ContentView: View {
                 }
             }
         }
-        // When the sidebar selection changes, animate the transition
-        // by updating displayedItem inside withAnimation.
         .onChange(of: selectedItem) { _, newValue in
             withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) {
                 displayedItem = newValue
@@ -158,7 +149,7 @@ struct ContentView: View {
 }
 
 // MARK: - Sort
-private extension Array where Element == WishItem {
+extension Array where Element == WishItem {
     func sorted(using option: SortOption) -> [WishItem] {
         switch option {
         case .priority:
