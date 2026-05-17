@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "Wishlist",
     platforms: [
-        .macOS(.v14)   // macOS 14 = Sonoma, required for @Observable
+        .macOS(.v14)
     ],
     targets: [
         .executableTarget(
