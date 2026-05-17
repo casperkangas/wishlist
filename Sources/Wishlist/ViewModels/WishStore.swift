@@ -1,5 +1,4 @@
 //  ViewModels/WishStore.swift
-//  Observable store — holds all data and handles JSON persistence.
 
 import Foundation
 import Observation
@@ -7,25 +6,25 @@ import Observation
 @Observable
 final class WishStore {
 
-    // MARK: – State
-    var items:      [WishItem]      = []
-    var categories: [WishCategory]  = WishCategory.defaults
+    var items: [WishItem] = []
+    var categories: [WishCategory] = WishCategory.defaults
 
-    // MARK: – Persistence
+    private static let trashRetentionDays = 3
+
     private static var saveURL: URL {
         let dir = FileManager.default
             .urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Wishlist", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir,
-                                                 withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("data.json")
     }
 
     init() {
         load()
+        purgeExpiredTrash()
     }
 
-    // MARK: – CRUD
+    // MARK: - CRUD
 
     func add(_ item: WishItem) {
         items.append(item)
@@ -38,9 +37,24 @@ final class WishStore {
         save()
     }
 
-    func delete(_ item: WishItem) {
+    /// Soft-delete: moves item to trash by stamping deletedAt
+    func softDelete(_ item: WishItem) {
+        var copy = item
+        copy.deletedAt = Date()
+        update(copy)
+    }
+
+    /// Hard-delete: permanently removes item
+    func hardDelete(_ item: WishItem) {
         items.removeAll { $0.id == item.id }
         save()
+    }
+
+    /// Restore a trashed item
+    func restore(_ item: WishItem) {
+        var copy = item
+        copy.deletedAt = nil
+        update(copy)
     }
 
     func toggleBought(_ item: WishItem) {
@@ -62,21 +76,47 @@ final class WishStore {
         save()
     }
 
-    // MARK: – Helpers
+    // MARK: - Queries
 
+    /// Live (non-deleted) items, optionally filtered by category
     func items(for category: WishCategory?) -> [WishItem] {
-        guard let category else { return items }
-        return items.filter { $0.categoryID == category.id }
+        let live = items.filter { !$0.isDeleted }
+        guard let category else { return live }
+        return live.filter { $0.categoryID == category.id }
     }
 
-    // MARK: – JSON I/O
+    /// Live items filtered by priority
+    func items(for priority: Priority) -> [WishItem] {
+        items.filter { !$0.isDeleted && $0.priority == priority }
+    }
+
+    /// Items currently in trash
+    var trashedItems: [WishItem] {
+        items.filter { $0.isDeleted }
+            .sorted { ($0.deletedAt ?? .distantPast) > ($1.deletedAt ?? .distantPast) }
+    }
+
+    // MARK: - Auto-purge trash after 3 days
+    func purgeExpiredTrash() {
+        let cutoff =
+            Calendar.current.date(
+                byAdding: .day, value: -Self.trashRetentionDays, to: Date()
+            ) ?? Date()
+        items.removeAll { item in
+            guard let deletedAt = item.deletedAt else { return false }
+            return deletedAt < cutoff
+        }
+        save()
+    }
+
+    // MARK: - Persistence
 
     private struct SaveData: Codable {
-        var items:      [WishItem]
+        var items: [WishItem]
         var categories: [WishCategory]
     }
 
-    private func save() {
+    func save() {
         let data = SaveData(items: items, categories: categories)
         if let encoded = try? JSONEncoder().encode(data) {
             try? encoded.write(to: Self.saveURL, options: .atomic)
@@ -84,10 +124,10 @@ final class WishStore {
     }
 
     private func load() {
-        guard let data    = try? Data(contentsOf: Self.saveURL),
-              let decoded = try? JSONDecoder().decode(SaveData.self, from: data)
+        guard let data = try? Data(contentsOf: Self.saveURL),
+            let decoded = try? JSONDecoder().decode(SaveData.self, from: data)
         else { return }
-        items      = decoded.items
+        items = decoded.items
         categories = decoded.categories
     }
 }

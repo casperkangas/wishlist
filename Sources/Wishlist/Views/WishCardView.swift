@@ -13,9 +13,10 @@ struct HoverButtonStyle: ButtonStyle {
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(isHovered
-                          ? hoverTint.opacity(0.18)
-                          : Color.clear)
+                    .fill(
+                        isHovered
+                            ? hoverTint.opacity(0.18)
+                            : Color.clear)
             )
             .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
             .animation(.easeOut(duration: 0.12), value: isHovered)
@@ -29,18 +30,18 @@ struct WishCardView: View {
     @Environment(WishStore.self) private var store
     let item: WishItem
 
-    @State private var showingEdit      = false
+    @State private var showingEdit = false
     @State private var confirmingDelete = false
-    @State private var isVisible        = true
+    @State private var isVisible = true
 
-    private let primaryText   = Color(red: 0.16, green: 0.13, blue: 0.10)
+    private let primaryText = Color(red: 0.16, green: 0.13, blue: 0.10)
     private let secondaryText = Color(red: 0.42, green: 0.38, blue: 0.32)
 
     private var priorityColor: Color {
         switch item.priority {
-        case .low:    return Color(red: 0.50, green: 0.54, blue: 0.58)
+        case .low: return Color(red: 0.50, green: 0.54, blue: 0.58)
         case .medium: return Color(red: 0.65, green: 0.50, blue: 0.25)
-        case .high:   return Color(red: 0.78, green: 0.55, blue: 0.08)
+        case .high: return Color(red: 0.78, green: 0.55, blue: 0.08)
         }
     }
 
@@ -54,7 +55,7 @@ struct WishCardView: View {
                     case .success(let image):
                         image
                             .resizable()
-                            .scaledToFit()          // show whole image, no cropping
+                            .scaledToFit()  // show whole image, no cropping
                             .frame(maxWidth: .infinity)
                             .background(Color(red: 0.92, green: 0.88, blue: 0.82))
                     case .failure:
@@ -141,7 +142,9 @@ struct WishCardView: View {
                     Spacer()
 
                     // Edit
-                    Button { showingEdit = true } label: {
+                    Button {
+                        showingEdit = true
+                    } label: {
                         Image(systemName: "pencil")
                     }
                     .buttonStyle(HoverButtonStyle(hoverTint: secondaryText))
@@ -165,15 +168,19 @@ struct WishCardView: View {
                     if confirmingDelete {
                         Button("Are you sure?") {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                store.delete(item)
+                                store.softDelete(item)
                             }
                         }
-                        .buttonStyle(HoverButtonStyle(
-                            hoverTint: Color(red: 0.72, green: 0.20, blue: 0.15)))
+                        .buttonStyle(
+                            HoverButtonStyle(
+                                hoverTint: Color(red: 0.72, green: 0.20, blue: 0.15))
+                        )
                         .foregroundStyle(Color(red: 0.72, green: 0.20, blue: 0.15))
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color(red: 0.72, green: 0.20, blue: 0.15).opacity(0.5), lineWidth: 1)
+                                .stroke(
+                                    Color(red: 0.72, green: 0.20, blue: 0.15).opacity(0.5),
+                                    lineWidth: 1)
                         )
                         .transition(.scale.combined(with: .opacity))
                     } else {
@@ -189,8 +196,10 @@ struct WishCardView: View {
                         } label: {
                             Image(systemName: "trash")
                         }
-                        .buttonStyle(HoverButtonStyle(
-                            hoverTint: Color(red: 0.72, green: 0.20, blue: 0.15)))
+                        .buttonStyle(
+                            HoverButtonStyle(
+                                hoverTint: Color(red: 0.72, green: 0.20, blue: 0.15))
+                        )
                         .foregroundStyle(Color(red: 0.60, green: 0.35, blue: 0.30))
                         .transition(.scale.combined(with: .opacity))
                     }
@@ -201,8 +210,9 @@ struct WishCardView: View {
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(Color(red: 0.98, green: 0.96, blue: 0.92))
-                .shadow(color: Color(red: 0.55, green: 0.45, blue: 0.30).opacity(0.12),
-                        radius: 8, x: 0, y: 3)
+                .shadow(
+                    color: Color(red: 0.55, green: 0.45, blue: 0.30).opacity(0.12),
+                    radius: 8, x: 0, y: 3)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)

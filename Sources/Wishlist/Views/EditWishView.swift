@@ -1,7 +1,7 @@
 //  Views/EditWishView.swift
 
-import SwiftUI
 import AppKit
+import SwiftUI
 
 struct EditWishView: View {
     @Environment(WishStore.self) private var store
@@ -9,27 +9,27 @@ struct EditWishView: View {
 
     let item: WishItem
 
-    @State private var name:           String
-    @State private var price:          String
-    @State private var urlString:      String
+    @State private var name: String
+    @State private var price: String
+    @State private var urlString: String
     @State private var imageURLString: String
-    @State private var notes:          String
-    @State private var priority:       Priority
-    @State private var categoryID:     UUID?
-    @State private var showValidation  = false
+    @State private var notes: String
+    @State private var priority: Priority
+    @State private var categoryID: UUID?
+    @State private var showValidation = false
 
     @FocusState private var focusedField: Field?
     private enum Field { case name }
 
     init(item: WishItem) {
         self.item = item
-        _name           = State(initialValue: item.name)
-        _price          = State(initialValue: item.price.map { String($0) } ?? "")
-        _urlString      = State(initialValue: item.urlString ?? "")
+        _name = State(initialValue: item.name)
+        _price = State(initialValue: item.price.map { String($0) } ?? "")
+        _urlString = State(initialValue: item.urlString ?? "")
         _imageURLString = State(initialValue: item.imageURLString ?? "")
-        _notes          = State(initialValue: item.notes ?? "")
-        _priority       = State(initialValue: item.priority)
-        _categoryID     = State(initialValue: item.categoryID)
+        _notes = State(initialValue: item.notes ?? "")
+        _priority = State(initialValue: item.priority)
+        _categoryID = State(initialValue: item.categoryID)
     }
 
     var body: some View {
@@ -97,16 +97,19 @@ struct EditWishView: View {
 
     private func save() {
         let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanName.isEmpty else { showValidation = true; return }
+        guard !cleanName.isEmpty else {
+            showValidation = true
+            return
+        }
 
-        var updated           = item
-        updated.name          = cleanName
-        updated.price         = Double(price.replacingOccurrences(of: ",", with: "."))
-        updated.urlString     = urlString.isEmpty     ? nil : urlString
+        var updated = item
+        updated.name = cleanName
+        updated.price = Double(price.replacingOccurrences(of: ",", with: "."))
+        updated.urlString = urlString.isEmpty ? nil : urlString
         updated.imageURLString = imageURLString.isEmpty ? nil : imageURLString
-        updated.notes         = notes.isEmpty         ? nil : notes
-        updated.priority      = priority
-        updated.categoryID    = categoryID
+        updated.notes = notes.isEmpty ? nil : notes
+        updated.priority = priority
+        updated.categoryID = categoryID
 
         store.update(updated)
         dismiss()

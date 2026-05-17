@@ -3,23 +3,23 @@
 import Foundation
 
 enum Priority: String, Codable, CaseIterable, Identifiable {
-    case low    = "Low"
+    case low = "Low"
     case medium = "Medium"
-    case high   = "High"
+    case high = "High"
 
     var id: String { rawValue }
 
     var icon: String {
         switch self {
-        case .low:    return "arrow.down.circle.fill"
+        case .low: return "arrow.down.circle.fill"
         case .medium: return "minus.circle.fill"
-        case .high:   return "arrow.up.circle.fill"
+        case .high: return "arrow.up.circle.fill"
         }
     }
 }
 
 struct WishItem: Identifiable, Codable, Equatable {
-    var id: UUID          = UUID()
+    var id: UUID = UUID()
     var name: String
     var price: Double?
     var urlString: String?
@@ -27,8 +27,10 @@ struct WishItem: Identifiable, Codable, Equatable {
     var notes: String?
     var priority: Priority = .medium
     var categoryID: UUID?
-    var isBought: Bool    = false
-    var createdAt: Date   = Date()
+    var isBought: Bool = false
+    var createdAt: Date = Date()
+    // nil = not deleted; set when soft-deleted
+    var deletedAt: Date? = nil
 
     var url: URL? {
         guard let s = urlString, !s.isEmpty else { return nil }
@@ -43,8 +45,10 @@ struct WishItem: Identifiable, Codable, Equatable {
     var formattedPrice: String? {
         guard let price else { return nil }
         let f = NumberFormatter()
-        f.numberStyle           = .currency
+        f.numberStyle = .currency
         f.maximumFractionDigits = 2
         return f.string(from: NSNumber(value: price))
     }
+
+    var isDeleted: Bool { deletedAt != nil }
 }

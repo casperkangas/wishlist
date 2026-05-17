@@ -1,7 +1,7 @@
 //  Views/AddWishView.swift
 
-import SwiftUI
 import AppKit
+import SwiftUI
 
 struct AddWishView: View {
     @Environment(WishStore.self) private var store
@@ -9,14 +9,14 @@ struct AddWishView: View {
 
     let preselectedCategoryID: UUID?
 
-    @State private var name             = ""
-    @State private var price            = ""
-    @State private var urlString        = ""
-    @State private var imageURLString   = ""
-    @State private var notes            = ""
+    @State private var name = ""
+    @State private var price = ""
+    @State private var urlString = ""
+    @State private var imageURLString = ""
+    @State private var notes = ""
     @State private var priority: Priority = .medium
     @State private var categoryID: UUID?
-    @State private var showingValidation  = false
+    @State private var showingValidation = false
 
     // Focus management — auto-focus the name field so keyboard works immediately
     @FocusState private var focusedField: Field?

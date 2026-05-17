@@ -8,6 +8,7 @@ struct WishListView: View {
     let items: [WishItem]
     let selectedCategory: WishCategory?
     let isBoughtView: Bool
+    let isDeletedView: Bool
     let sortOption: SortOption
     let onAddWish: () -> Void
 
@@ -19,26 +20,39 @@ struct WishListView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 header
+
                 if items.isEmpty {
                     emptyState
                 } else {
-                    LazyVStack(spacing: 14) {
+                    VStack(spacing: 14) {
                         ForEach(items) { item in
-                            WishCardView(item: item)
-                                .transition(
-                                    .asymmetric(
-                                        insertion: .move(edge: .top).combined(with: .opacity),
-                                        removal: .move(edge: .trailing).combined(with: .opacity)
-                                    )
+                            Group {
+                                if isDeletedView {
+                                    TrashedCardView(item: item)
+                                } else {
+                                    WishCardView(item: item)
+                                }
+                            }
+                            // Per-card removal animation (mark bought / delete)
+                            .transition(
+                                .asymmetric(
+                                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                                    removal:   .move(edge: .trailing).combined(with: .opacity)
                                 )
+                            )
                         }
                     }
-                    .animation(.spring(response: 0.4, dampingFraction: 0.75), value: items.map { $0.id })
+                    .animation(
+                        .spring(response: 0.38, dampingFraction: 0.78),
+                        value: items.map { $0.id }
+                    )
                 }
             }
             .padding(24)
             .frame(maxWidth: 860, alignment: .leading)
         }
+        // No .id() or .transition() here — the parent ContentView
+        // handles the full-view slide via ZStack + .id(displayedItem).
     }
 
     private var header: some View {
@@ -52,7 +66,7 @@ struct WishListView: View {
                     .foregroundStyle(secondaryText)
             }
             Spacer()
-            if !items.isEmpty {
+            if !items.isEmpty && !isDeletedView {
                 Text("Sorted by \(sortOption.rawValue.lowercased())")
                     .font(.caption)
                     .foregroundStyle(secondaryText.opacity(0.7))
@@ -63,21 +77,18 @@ struct WishListView: View {
 
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Image(systemName: isBoughtView ? "checkmark.seal" : "gift")
+            Image(systemName: emptyIcon)
                 .font(.system(size: 32))
                 .foregroundStyle(amber)
 
-            Text(isBoughtView ? "Nothing bought yet" : "No wishes yet")
+            Text(emptyTitle)
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(primaryText)
 
-            Text(isBoughtView
-                 ? "Mark wishes as bought and they'll appear here."
-                 : "Start your list by adding something you'd love to have."
-            )
-            .foregroundStyle(secondaryText)
+            Text(emptyMessage)
+                .foregroundStyle(secondaryText)
 
-            if !isBoughtView {
+            if !isBoughtView && !isDeletedView {
                 Button(action: onAddWish) {
                     Label("Add Your First Wish", systemImage: "plus.circle.fill")
                 }
@@ -95,5 +106,21 @@ struct WishListView: View {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .stroke(Color(red: 0.80, green: 0.74, blue: 0.64).opacity(0.5), lineWidth: 1)
         )
+    }
+
+    private var emptyIcon: String {
+        if isDeletedView { return "trash" }
+        if isBoughtView  { return "checkmark.seal" }
+        return "gift"
+    }
+    private var emptyTitle: String {
+        if isDeletedView { return "Trash is empty" }
+        if isBoughtView  { return "Nothing bought yet" }
+        return "No wishes yet"
+    }
+    private var emptyMessage: String {
+        if isDeletedView { return "Deleted wishes appear here and are removed after 3 days." }
+        if isBoughtView  { return "Mark wishes as bought and they'll appear here." }
+        return "Start your list by adding something you'd love to have."
     }
 }
