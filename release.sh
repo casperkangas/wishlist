@@ -5,7 +5,7 @@
 # Usage: ./release.sh v1.0.0 "What changed in this version"
 # ============================================================
 
-set -e  # Exit immediately if any command fails
+set -e
 
 # ── Arguments ───────────────────────────────────────────────
 VERSION=$1
@@ -41,36 +41,74 @@ if ! git diff-index --quiet HEAD --; then
 fi
 echo "✅  Working directory is clean."
 
-# ── 2. Build ────────────────────────────────────────────────
+# ── 2. Build binary with swift build ───────────────────────
 echo ""
-echo "🔨  Building release..."
-xcodebuild \
-  -scheme Wishlist \
-  -configuration Release \
-  -derivedDataPath ./build \
-  -destination "platform=macOS,arch=arm64" \
-  CODE_SIGN_IDENTITY="-" \
-  build
+echo "🔨  Building release binary..."
+swift build -c release 2>&1
 
-APP_PATH="./build/Build/Products/Release/Wishlist.app"
-
-if [ ! -d "$APP_PATH" ]; then
-  echo "❌  Build failed — Wishlist.app not found."
+BINARY=".build/release/Wishlist"
+if [ ! -f "$BINARY" ]; then
+  echo "❌  Build failed — binary not found at $BINARY"
   exit 1
 fi
 echo "✅  Build succeeded."
 
-# ── 3. Zip ──────────────────────────────────────────────────
+# ── 3. Assemble .app bundle ──────────────────────────────
 echo ""
-echo "📦  Zipping Wishlist.app..."
-ZIP_PATH="./build/Build/Products/Release/Wishlist.zip"
-rm -f "$ZIP_PATH"
-cd ./build/Build/Products/Release
-zip -r Wishlist.zip Wishlist.app
-cd ../../../../
-echo "✅  Zipped to $ZIP_PATH"
+echo "📦  Assembling Wishlist.app bundle..."
 
-# ── 4. Tag ──────────────────────────────────────────────────
+APP="./dist/Wishlist.app"
+rm -rf "$APP"
+mkdir -p "$APP/Contents/MacOS"
+mkdir -p "$APP/Contents/Resources"
+
+# Copy binary
+cp "$BINARY" "$APP/Contents/MacOS/Wishlist"
+
+# Write Info.plist
+cat > "$APP/Contents/Info.plist" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>Wishlist</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.casperkangas.wishlist</string>
+    <key>CFBundleVersion</key>
+    <string>${VERSION}</string>
+    <key>CFBundleShortVersionString</key>
+    <string>${VERSION}</string>
+    <key>CFBundleExecutable</key>
+    <string>Wishlist</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+</dict>
+</plist>
+EOF
+
+# Sign it locally
+codesign --force --deep --sign "-" "$APP"
+
+echo "✅  Wishlist.app assembled at $APP"
+
+# ── 4. Zip ──────────────────────────────────────────────────
+echo ""
+echo "🗜️  Zipping..."
+ZIP="./dist/Wishlist.zip"
+rm -f "$ZIP"
+cd ./dist
+zip -r Wishlist.zip Wishlist.app
+cd ..
+echo "✅  Zipped to $ZIP"
+
+# ── 5. Tag ──────────────────────────────────────────────────
 echo ""
 echo "🏷   Tagging $VERSION..."
 if git rev-parse "$VERSION" >/dev/null 2>&1; then
@@ -81,11 +119,11 @@ git tag "$VERSION"
 git push origin "$VERSION"
 echo "✅  Tag pushed."
 
-# ── 5. GitHub Release ───────────────────────────────────────
+# ── 6. GitHub Release ──────────────────────────────────────
 echo ""
 echo "🐙  Creating GitHub release..."
 gh release create "$VERSION" \
-  "$ZIP_PATH" \
+  "$ZIP" \
   --title "Wishlist $VERSION" \
   --notes "$NOTES"
 
