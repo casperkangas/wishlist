@@ -10,9 +10,6 @@ let package = Package(
         .executableTarget(
             name: "Wishlist",
             path: "Sources/Wishlist",
-            resources: [
-                .process("Info.plist")
-            ],
             swiftSettings: [
                 .unsafeFlags(["-strict-concurrency=minimal"])
             ]
