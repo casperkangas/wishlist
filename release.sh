@@ -65,6 +65,19 @@ mkdir -p "$APP/Contents/Resources"
 # Copy binary
 cp "$BINARY" "$APP/Contents/MacOS/Wishlist"
 
+# Copy icon if it exists
+ICON_PATH="Sources/Wishlist/Views/AppIcon.icns"
+if [ -f "$ICON_PATH" ]; then
+  cp "$ICON_PATH" "$APP/Contents/Resources/AppIcon.icns"
+  ICON_ENTRY="
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>"
+  echo "🎨  Icon included."
+else
+  ICON_ENTRY=""
+  echo "⚠️  No icon found at $ICON_PATH — skipping."
+fi
+
 # Write Info.plist
 cat > "$APP/Contents/Info.plist" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -88,7 +101,7 @@ cat > "$APP/Contents/Info.plist" << EOF
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSPrincipalClass</key>
-    <string>NSApplication</string>
+    <string>NSApplication</string>${ICON_ENTRY}
 </dict>
 </plist>
 EOF
