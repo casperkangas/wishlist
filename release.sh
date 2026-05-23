@@ -50,7 +50,7 @@ xcodebuild \
   -derivedDataPath ./build \
   -destination "platform=macOS,arch=arm64" \
   CODE_SIGN_IDENTITY="-" \
-  build 2>&1 | grep -E "(error:|Build succeeded|Build FAILED)"
+  build
 
 APP_PATH="./build/Build/Products/Release/Wishlist.app"
 
