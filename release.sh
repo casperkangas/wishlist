@@ -66,7 +66,7 @@ mkdir -p "$APP/Contents/Resources"
 cp "$BINARY" "$APP/Contents/MacOS/Wishlist"
 
 # Copy icon if it exists
-ICON_PATH="Sources/Wishlist/Views/AppIcon.icns"
+ICON_PATH="Sources/Wishlist/AppIcon.icns"
 if [ -f "$ICON_PATH" ]; then
   cp "$ICON_PATH" "$APP/Contents/Resources/AppIcon.icns"
   ICON_ENTRY="
