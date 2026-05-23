@@ -48,9 +48,9 @@ xcodebuild \
   -scheme Wishlist \
   -configuration Release \
   -derivedDataPath ./build \
-  -destination "platform=macOS" \
+  -destination "platform=macOS,arch=arm64" \
   CODE_SIGN_IDENTITY="-" \
-  build | grep -E "(error:|warning:|Build succeeded|Build FAILED)"
+  build 2>&1 | grep -E "(error:|Build succeeded|Build FAILED)"
 
 APP_PATH="./build/Build/Products/Release/Wishlist.app"
 
